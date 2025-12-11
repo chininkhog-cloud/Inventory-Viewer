@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inventory Viewer</title>
+  <meta name="description" content="A modern, accessible product inventory viewer with CRUD, filtering, sorting, and local persistence." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <div class="brand">
+        <!-- Logo: minimalist 4-box grid representing inventory -->
+        <svg class="logo" width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="2" y="2" width="9" height="9" rx="2" fill="currentColor"></rect>
+          <rect x="13" y="2" width="9" height="9" rx="2" fill="currentColor" opacity="0.95"></rect>
+          <rect x="2" y="13" width="9" height="9" rx="2" fill="currentColor" opacity="0.9"></rect>
+          <rect x="13" y="13" width="9" height="9" rx="2" fill="currentColor" opacity="0.85"></rect>
+        </svg>
+        <div>
+          <h1 class="app-title">Inventory Viewer</h1>
+          <p class="app-sub">Clean • Accessible • Responsive</p>
+        </div>
+      </div>
+
+      <div class="header-actions" role="toolbar" aria-label="Global actions">
+        <button id="themeToggle" class="icon-button" type="button" aria-pressed="false" aria-label="Toggle dark mode" title="Toggle light/dark mode">
+          <svg class="icon icon-theme" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+          </svg>
+        </button>
+
+        <button id="resetSampleBtn" class="button ghost" type="button" title="Reset inventory to sample data">Reset</button>
+
+        <button id="exportBtn" class="button ghost" type="button" title="Export inventory as JSON">Export</button>
+
+        <label for="importFile" class="button ghost file-label" title="Import inventory JSON">Import
+          <input id="importFile" type="file" accept="application/json" aria-label="Import inventory JSON">
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="app-main" role="main">
+    <!-- Controls panel -->
+    <section class="panel controls-panel" aria-labelledby="controls-heading">
+      <h2 id="controls-heading" class="panel-title">Search, filter & sort</h2>
+
+      <form id="controlsForm" class="controls" autocomplete="off" novalidate>
+        <div class="controls-row">
+          <div class="field">
+            <label for="searchInput">Search products</label>
+            <div class="input-with-icon">
+              <input id="searchInput" name="search" type="search" placeholder="Search by name..." aria-describedby="searchHelp" />
+              <svg class="icon icon-search" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="6"></circle>
+                <path d="M21 21l-4.35-4.35"></path>
+              </svg>
+            </div>
+            <div id="searchHelp" class="help-text">Live, case-insensitive filtering.</div>
+          </div>
+
+          <div class="field">
+            <label for="categoryFilter">Category</label>
+            <select id="categoryFilter" name="category" aria-controls="productsTable">
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <div class="field">
+            <label for="sortBy">Sort by</label>
+            <select id="sortBy" name="sortBy" aria-controls="productsTable">
+              <option value="name">Name</option>
+              <option value="price">Price</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="sortDir">Direction</label>
+            <select id="sortDir" name="sortDir" aria-controls="productsTable">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+
+          <div class="field align-end">
+            <button id="clearFiltersBtn" type="button" class="button ghost" title="Clear filters">Clear</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Stats panel -->
+    <section class="panel stats-panel" aria-labelledby="stats-heading">
+      <h2 id="stats-heading" class="panel-title">Inventory summary</h2>
+      <div class="stats" role="status" aria-live="polite">
+        <div class="stat-item">
+          <div class="stat-label">Total items</div>
+          <div id="totalItems" class="stat-value">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Inventory value</div>
+          <div id="totalValue" class="stat-value">$0.00</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Low stock</div>
+          <div id="lowStockCount" class="stat-value">0</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add product panel -->
+    <section class="panel add-panel" aria-labelledby="add-heading">
+      <h2 id="add-heading" class="panel-title">Add product</h2>
+
+      <form id="productForm" class="product-form" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="nameInput">Product name</label>
+            <input id="nameInput" name="name" type="text" placeholder="e.g., Wireless Mouse" required aria-required="true" />
+            <p class="error" id="nameError" role="alert" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="categoryInput">Category</label>
+            <select id="categoryInput" name="category" required aria-required="true"></select>
+            <p class="error" id="categoryError" role="alert" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="priceInput">Price</label>
+            <input id="priceInput" name="price" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="e.g., 19.99" required aria-required="true" />
+            <p class="error" id="priceError" role="alert" aria-live="polite"></p>
+          </div>
+
+          <div class="field">
+            <label for="qtyInput">Quantity</label>
+            <input id="qtyInput" name="quantity" type="number" inputmode="numeric" step="1" min="0" placeholder="e.g., 10" required aria-required="true" />
+            <p class="error" id="qtyError" role="alert" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="addBtn" type="submit" class="button primary">Add product</button>
+          <button id="formResetBtn" type="reset" class="button ghost">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Products panel -->
+    <section class="panel list-panel" aria-labelledby="list-heading">
+      <h2 id="list-heading" class="panel-title">Products</h2>
+
+      <div class="table-wrap" role="region" aria-labelledby="list-heading">
+        <table id="productsTable" class="table" aria-describedby="tableHelp">
+          <caption class="visually-hidden">Product inventory table</caption>
+          <thead>
+            <tr>
+              <th scope="col" id="th-name" data-key="name" aria-sort="none" tabindex="0">Name</th>
+              <th scope="col" id="th-category" data-key="category">Category</th>
+              <th scope="col" id="th-price" data-key="price" aria-sort="none" tabindex="0">Price</th>
+              <th scope="col" id="th-qty" data-key="quantity">Quantity</th>
+              <th scope="col" id="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTbody">
+            <!-- Rows rendered by script.js -->
+          </tbody>
+        </table>
+
+        <p id="tableHelp" class="help-text">Click Name or Price headers to toggle sort order.</p>
+        <div id="noResults" class="no-results" hidden role="status" aria-live="polite">No results match your search and filter.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
